@@ -52,7 +52,9 @@ An e-commerce web application built with Go (Gin) and MongoDB: storefront, cart,
 │       ├── provisioning/    # Datasource + dashboard provisioning
 │       └── dashboards/      # Dashboard JSON (Midterm overview)
 ├── docker-compose.yml
-└── MIDTERM_REPORT.md        # Report draft (SLI/SLO, screenshot checklist)
+├── MIDTERM_REPORT.md        # Report draft (SLI/SLO, screenshot checklist)
+├── PRESENTATION.md          # Slide-by-slide defense deck (copy to Slides)
+└── DEFENSE_SIMPLE_RU.md     # Simple Russian “explain like I’m 5” for oral defense
 ```
 
 ## Where metrics and charts come from
@@ -146,17 +148,6 @@ docker compose stop backend
 ```
 
 After ~1 minute, Prometheus → **Alerts** should show a **FIRING** alert (e.g. `ClothesStoreServiceDown`).
-
-## Docker Swarm (bonus +10)
-
-Swarm is **not** enabled by default in this repo; only the steps below are documented.
-
-```bash
-docker swarm init
-docker stack deploy -c docker-compose.yml clothes-store
-```
-
-For multiple backend replicas in Swarm, add `deploy.replicas` (e.g. `2`) under the `backend` service and keep Nginx pointing at the `backend` **service name** — Swarm load-balances across replicas automatically.
 
 ## Code quality
 

@@ -39,7 +39,7 @@ func main() {
 	server.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	if cfg.MongoURI == "" {
-		log.Fatalf("error when connecting to mongo, please specify MONGO_URI in .env")
+		log.Fatalf("error when connecting to mongo, please specify MONGODB_URI in .env")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
