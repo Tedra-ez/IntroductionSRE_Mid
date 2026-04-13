@@ -1,0 +1,39 @@
+{{define "title"}}Login – Clothes Store{{end}}
+
+{{define "content"}}
+<div class="auth-split-wrapper">
+    <div class="auth-image-side">
+        <div class="auth-quote">
+            "Style is a way to say who you are <br>without having to speak."
+        </div>
+    </div>
+    
+    <div class="auth-form-side">
+        <h1 class="auth-title">Welcome Back</h1>
+        
+        {{if .Error}}
+        <div class="error-message">
+            {{.Error}}
+        </div>
+        {{end}}
+
+        <form method="post" action="/auth/login" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" required placeholder="name@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required placeholder="Enter your password">
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">Sign In</button>
+        </form>
+
+        <div class="auth-footer">
+            New here? <a href="/register">Create an account</a>
+        </div>
+    </div>
+</div>
+{{end}}

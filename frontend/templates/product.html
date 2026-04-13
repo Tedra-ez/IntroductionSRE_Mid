@@ -1,0 +1,190 @@
+{{define "title"}}{{if .Product.Name}}{{.Product.Name}}{{else}}Product Details{{end}} – Clothes Store{{end}}
+
+{{define "content"}}
+<div class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xxl);">
+    <div class="product-detail-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+
+        
+        <div class="product-gallery">
+            <div class="main-image-container"
+                style="background: var(--color-bg-secondary); aspect-ratio: 3/4; overflow: hidden; margin-bottom: 16px;">
+                {{if .Product.Images}}
+                <img src="{{index .Product.Images 0}}" alt="{{.Product.Name}}" id="main-image"
+                    style="width: 100%; height: 100%; object-fit: cover;">
+                {{else}}
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#999;">
+                    No image</div>
+                {{end}}
+            </div>
+
+            {{if gt (len .Product.Images) 1}}
+            <div class="thumbnail-list" style="display: flex; gap: 12px; overflow-x: auto;">
+                {{range .Product.Images}}
+                <img src="{{.}}" alt="Thumbnail" class="thumbnail"
+                    style="width: 80px; aspect-ratio: 1; object-fit: cover; cursor: pointer; border: 1px solid transparent;"
+                    onclick="document.getElementById('main-image').src = this.src">
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        
+        <div class="product-details">
+            <div class="product-breadcrumb"
+                style="font-size: 12px; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 16px;">
+                <a href="/">Home</a> / <a href="/shop">Shop</a> / {{.Product.Category}}
+            </div>
+
+            <h1 class="product-title-large" style="font-size: 32px; font-weight: 600; margin-bottom: 8px;">
+                {{.Product.Name}}</h1>
+
+            <div class="product-price-large" style="font-size: 24px; font-weight: 500; margin-bottom: 24px;">
+                ${{printf "%.2f" .Product.Price}}
+            </div>
+
+            <div class="product-meta" style="font-size: 12px; color: var(--color-text-muted); margin-bottom: 16px;">
+                ID: {{.Product.ID}}
+            </div>
+
+            <div class="product-description"
+                style="color: var(--color-text-muted); margin-bottom: 32px; line-height: 1.6;">
+                {{.Product.Description}}
+            </div>
+
+            <div class="product-form">
+                {{if .Product.Colors}}
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Color</label>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        {{range .Product.Colors}}
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="color" value="{{.}}" style="display: none;">
+                            <span class="color-option"
+                                style="display: block; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 13px; transition: all .2s ease;">{{.}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+
+                {{if .Product.Sizes}}
+                <div class="form-group" style="margin-bottom: 32px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Size</label>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        {{range .Product.Sizes}}
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="size" value="{{.}}" style="display: none;">
+                            <span class="size-option"
+                                style="display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 6px; font-size: 13px; transition: all .2s ease;">{{.}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+
+                <div class="actions" style="display: flex; gap: 16px;">
+                    <button type="button" id="product-add-cart" class="btn"
+                        style="flex: 1; justify-content: center; height: 48px;" data-product-id="{{.Product.ID}}"
+                        data-product-name="{{.Product.Name}}" data-product-price="{{printf " %.2f" .Product.Price}}"
+                        data-product-image="{{if .Product.Images}}{{index .Product.Images 0}}{{end}}">
+                        <i data-lucide="shopping-bag" style="margin-right: 8px;"></i> Add to Cart
+                    </button>
+                    <button type="button" id="product-add-wish" class="btn btn-outline" style="width: 48px; padding: 0;"
+                        data-product-id="{{.Product.ID}}" data-product-name="{{.Product.Name}}"
+                        data-product-price="{{printf " %.2f" .Product.Price}}"
+                        data-product-image="{{if .Product.Images}}{{index .Product.Images 0}}{{end}}">
+                        <i data-lucide="heart"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-features"
+                style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--color-border);">
+                <div class="feature-row" style="display: flex; gap: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+                        <i data-lucide="shield-check" size="20"></i> Premium Material
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+                        <i data-lucide="truck" size="20"></i> Fast Shipping
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+                        <i data-lucide="refresh-cw" size="20"></i> Free Returns
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="product-reviews"
+                style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--color-border);">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Reviews (0)</h3>
+                <div style="color: var(--color-text-muted); font-size: 13px;">No reviews yet.</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="recently-viewed"
+        style="margin-top: 80px; padding-top: 48px; border-top: 1px solid var(--color-border);">
+        <h2 class="section-title" style="margin-bottom: 32px;">Recently Viewed</h2>
+        <div class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+            
+            <div class="product-card">
+                <a href="/shop">
+                    <div class="product-image-container">
+                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80"
+                            alt="Leather Boots" class="product-image">
+                        <div class="product-actions">
+                            <button class="action-btn"><i data-lucide="shopping-bag" size="18"></i></button>
+                            <button class="action-btn"><i data-lucide="heart" size="18"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <div class="product-title">Chelsea Boots</div>
+                            <div class="product-price">$180.00</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="product-card">
+                <a href="/shop">
+                    <div class="product-image-container">
+                        <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=800&q=80"
+                            alt="Classic Tee" class="product-image">
+                        <div class="product-actions">
+                            <button class="action-btn"><i data-lucide="shopping-bag" size="18"></i></button>
+                            <button class="action-btn"><i data-lucide="heart" size="18"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <div class="product-title">Classic Cotton Tee</div>
+                            <div class="product-price">$45.00</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Scoped styles for interaction feedback */
+    input[type="radio"]:checked+span {
+        background-color: var(--color-text);
+        color: white;
+        border-color: var(--color-text);
+    }
+
+    @media (max-width: 768px) {
+        .product-detail-layout {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+
+<script>
+    lucide.createIcons();
+    // Simple logic for selection styling is handled by CSS :checked + span
+</script>
+{{end}}

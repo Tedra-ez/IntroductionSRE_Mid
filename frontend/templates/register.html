@@ -1,0 +1,44 @@
+{{define "title"}}Register – Clothes Store{{end}}
+
+{{define "content"}}
+<div class="auth-split-wrapper">
+    <div class="auth-image-side" style="background-image: url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80');">
+        <div class="auth-quote">
+            "Fashion is the armor to survive the reality of everyday life."
+        </div>
+    </div>
+    
+    <div class="auth-form-side">
+        <h1 class="auth-title">Create Account</h1>
+        
+        {{if .Error}}
+        <div class="error-message">
+            {{.Error}}
+        </div>
+        {{end}}
+
+        <form method="post" action="/auth/register" class="auth-form">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" name="fullName" class="form-input" required placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" required placeholder="name@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required placeholder="Create a password">
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="/login">Sign In</a>
+        </div>
+    </div>
+</div>
+{{end}}

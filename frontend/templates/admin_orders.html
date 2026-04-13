@@ -1,0 +1,158 @@
+{{define "title"}}Orders – Admin{{end}}
+
+{{define "content"}}
+<div class="account-page">
+    <aside class="account-sidebar">
+        <div class="account-sidebar-profile">
+            <div class="account-avatar">A</div>
+            <div class="account-sidebar-name">Administrator</div>
+            <span class="account-role-badge badge-admin">Admin</span>
+        </div>
+        <nav class="account-nav">
+            <a href="/admin/dashboard" class="account-nav-link">
+                <i data-lucide="layout-dashboard"></i> Dashboard
+            </a>
+            <a href="/admin/orders" class="account-nav-link active">
+                <i data-lucide="package"></i> Orders
+            </a>
+            <a href="/admin/products" class="account-nav-link">
+                <i data-lucide="shopping-bag"></i> Products
+            </a>
+            <a href="/admin/users" class="account-nav-link">
+                <i data-lucide="users"></i> Users
+            </a>
+            <a href="/admin/analytics" class="account-nav-link">
+                <i data-lucide="bar-chart-3"></i> Analytics
+            </a>
+            <div class="account-nav-divider"></div>
+            <a href="/account" class="account-nav-link">
+                <i data-lucide="user"></i> My Account
+            </a>
+            <a href="/auth/logout" class="account-nav-link nav-link-danger">
+                <i data-lucide="log-out"></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="account-main" style="max-width:1200px;">
+        <h1 class="account-section-title" style="font-size:24px;margin-bottom:24px;">
+            <i data-lucide="package"></i>
+            {{if .FilterUser}}
+            Orders for {{.FilterUser.FullName}}
+            <a href="/admin/orders" style="font-size:12px;margin-left:12px;color:var(--color-text-muted);">(View All)</a>
+            {{else}}
+            All Orders
+            {{end}}
+        </h1>
+
+        <div style="background:white;border-radius:12px;padding:24px;border:1px solid var(--color-border);">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="text-align:left;border-bottom:2px solid #eee;">
+                        <th style="padding:12px 0;">Order ID</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Delivery</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Orders}}
+                    <tr style="border-bottom:1px solid #eee;" data-order-id="{{.ID}}">
+                        <td style="padding:12px 0;font-family:monospace;font-size:12px;">{{slice .ID 0 8}}...</td>
+                        <td>
+                            <a href="/admin/users/{{.UserID}}/orders" style="color:var(--color-accent);font-size:13px;">{{slice .UserID 0 8}}...</a>
+                        </td>
+                        <td>
+                            <select class="status-select" data-order-id="{{.ID}}" style="padding:4px 8px;border:1px solid var(--color-border);border-radius:4px;font-size:12px;">
+                                <option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
+                                <option value="processing" {{if eq .Status "processing"}}selected{{end}}>Processing</option>
+                                <option value="shipped" {{if eq .Status "shipped"}}selected{{end}}>Shipped</option>
+                                <option value="delivered" {{if eq .Status "delivered"}}selected{{end}}>Delivered</option>
+                                <option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>Cancelled</option>
+                            </select>
+                        </td>
+                        <td style="font-size:13px;">{{len .Items}} item(s)</td>
+                        <td style="font-weight:600;">${{printf "%.2f" .Total}}</td>
+                        <td style="font-size:13px;color:var(--color-text-muted);">{{.DeliveryMethod}}</td>
+                        <td style="font-size:13px;color:var(--color-text-muted);">{{.CreatedAt.Format "Jan 02, 15:04"}}</td>
+                        <td>
+                            <button class="view-details-btn" data-order-id="{{.ID}}" style="background:none;border:none;cursor:pointer;color:var(--color-accent);">
+                                <i data-lucide="eye" style="width:16px;height:16px;"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="order-details" data-order-id="{{.ID}}" style="display:none;background:#f9f9f9;">
+                        <td colspan="8" style="padding:16px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                                <div>
+                                    <h4 style="font-size:13px;font-weight:600;margin-bottom:8px;">Order Items</h4>
+                                    {{range .Items}}
+                                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #eee;">
+                                        <span>{{.ProductName}} ({{.SelectedSize}} / {{.SelectedColor}}) x{{.Quantity}}</span>
+                                        <span>${{printf "%.2f" .LineTotal}}</span>
+                                    </div>
+                                    {{end}}
+                                </div>
+                                <div>
+                                    <h4 style="font-size:13px;font-weight:600;margin-bottom:8px;">Order Details</h4>
+                                    <div style="font-size:12px;color:var(--color-text-muted);">
+                                        <p><strong>Payment:</strong> {{.PaymentMethod}}</p>
+                                        <p><strong>Delivery:</strong> {{.DeliveryMethod}}</p>
+                                        <p><strong>Address:</strong> {{if .DeliveryAddress}}{{.DeliveryAddress}}{{else}}Not specified{{end}}</p>
+                                        {{if .Comment}}<p><strong>Comment:</strong> {{.Comment}}</p>{{end}}
+                                        <p><strong>Subtotal:</strong> ${{printf "%.2f" .Subtotal}}</p>
+                                        <p><strong>Delivery Fee:</strong> ${{printf "%.2f" .DeliveryFee}}</p>
+                                        <p><strong>Total:</strong> ${{printf "%.2f" .Total}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{if not .Orders}}<p style="color:var(--color-text-muted);text-align:center;padding:24px;">No orders found</p>{{end}}
+        </div>
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+
+    document.querySelectorAll('.view-details-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const orderId = btn.dataset.orderId;
+            const detailsRow = document.querySelector(`.order-details[data-order-id="${orderId}"]`);
+            if (detailsRow) {
+                detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+            }
+        });
+    });
+
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const orderId = select.dataset.orderId;
+            const newStatus = e.target.value;
+            try {
+                const res = await fetch(`/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) {
+                    select.style.borderColor = 'var(--color-success)';
+                    setTimeout(() => select.style.borderColor = '', 2000);
+                }
+            } catch (err) {
+                alert('Failed to update status');
+            }
+        });
+    });
+});
+</script>
+{{end}}

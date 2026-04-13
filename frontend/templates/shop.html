@@ -1,0 +1,85 @@
+{{define "title"}}Shop – Clothes Store{{end}}
+
+{{define "result_count"}}{{len .Products}}{{end}}
+
+{{define "content"}}
+<div class="toolbar"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+    <span class="toolbar-count" style="font-weight: 500; color: var(--color-text-muted);">{{len .Products}} items
+        found</span>
+    <div class="toolbar-actions">
+        <form method="get" action="/shop" class="sort-form">
+            <input type="hidden" name="q" value="{{.SearchQuery}}">
+            {{range .SelectedCategoryList}}<input type="hidden" name="category" value="{{.}}">{{end}}
+            {{range .SelectedGenderList}}<input type="hidden" name="gender" value="{{.}}">{{end}}
+            {{range .SelectedColorList}}<input type="hidden" name="color" value="{{.}}">{{end}}
+            {{range .SelectedSizeList}}<input type="hidden" name="size" value="{{.}}">{{end}}
+            <label class="sort-label" for="sort-select">Sort</label>
+            <select id="sort-select" name="sort" class="sort-select" onchange="this.form.submit()">
+                <option value="recommended" {{if eq .Sort "recommended"}}selected{{end}}>Recommended</option>
+                <option value="price_asc" {{if eq .Sort "price_asc"}}selected{{end}}>Price: low to high</option>
+                <option value="price_desc" {{if eq .Sort "price_desc"}}selected{{end}}>Price: high to low</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+{{if .FilterChips}}
+<div class="active-filters">
+    <span class="active-filters-label">Filters:</span>
+    <div class="filter-chip-list">
+        {{range .FilterChips}}
+        <a href="{{.URL}}" class="filter-chip">{{.Label}} <span class="filter-chip-remove">&times;</span></a>
+        {{end}}
+        <a href="{{.ClearFiltersURL}}" class="clear-filters">Clear filters</a>
+    </div>
+</div>
+{{end}}
+
+<div class="product-grid">
+    {{range .Products}}
+    <div class="product-card" data-product-id="{{.ID}}" data-product-name="{{.Name}}" data-product-price="{{printf "%.2f" .Price}}" data-product-image="{{if .Images}}{{index .Images 0}}{{end}}">
+        <a href="/product/{{.ID}}">
+            <div class="product-image-container">
+                {{if .Images}}
+                <img src="{{index .Images 0}}" alt="{{.Name}}" class="product-image"
+                    onerror="this.parentElement.style.background='#f5f5f5'">
+                {{else}}
+                <div
+                    style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;background:#f5f5f5">
+                    No image</div>
+                {{end}}
+
+                <div class="product-actions">
+                    <button class="action-btn btn-add-cart" title="Add to Cart">
+                        <i data-lucide="shopping-bag" size="18"></i>
+                    </button>
+                    <button class="action-btn btn-add-wish" title="Add to Wishlist">
+                        <i data-lucide="heart" size="18"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-info">
+                <div>
+                    <div class="product-title">{{.Name}}</div>
+                    {{if .Colors}}
+                    <div style="font-size: 11px; color: var(--color-text-muted); margin-bottom: 4px;">{{len .Colors}}
+                        colors</div>
+                    {{end}}
+                </div>
+                <div class="product-price">${{printf "%.2f" .Price}}</div>
+            </div>
+        </a>
+    </div>
+    {{else}}
+    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--color-text-muted);">
+        <i data-lucide="search-x" size="48" style="margin-bottom: 16px; opacity: 0.5;"></i>
+        <p>No products found matching your criteria.</p>
+        <a href="/shop" class="btn btn-outline" style="margin-top: 16px;">Clear Filters</a>
+    </div>
+    {{end}}
+</div>
+
+<script>lucide.createIcons();</script>
+{{end}}

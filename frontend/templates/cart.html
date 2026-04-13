@@ -1,0 +1,51 @@
+{{define "title"}}Shopping Cart – Clothes Store{{end}}
+
+{{define "content"}}
+<div class="cart-page">
+    <div class="cart-header">
+        <h1 class="cart-page-title"><i data-lucide="shopping-bag"></i> Shopping Cart</h1>
+        <span id="cart-count-label" class="cart-count-label">0 item(s)</span>
+    </div>
+
+    <div id="cart-empty" class="cart-empty-state" style="display:none;">
+        <i data-lucide="shopping-bag" class="cart-empty-icon"></i>
+        <h2>Your cart is empty</h2>
+        <p>Looks like you haven't added anything yet.</p>
+        <a href="/shop" class="btn">Continue Shopping</a>
+    </div>
+
+    <div class="cart-layout">
+        <div id="cart-items" class="cart-items-list"></div>
+
+        <div id="cart-summary" class="cart-summary" style="display:none;">
+            <h3 class="cart-summary-title">Order Summary</h3>
+            <div class="cart-summary-row">
+                <span>Subtotal</span>
+                <span id="cart-subtotal">$0.00</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>Delivery</span>
+                <span id="cart-delivery">$0.00</span>
+            </div>
+            <div class="cart-summary-row hint">
+                <span>Free delivery on orders over $200</span>
+            </div>
+            <div class="cart-summary-divider"></div>
+            <div class="cart-summary-row total">
+                <span>Total</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+            {{if .User}}
+            <a href="/checkout" id="place-order-btn" class="btn cart-checkout-btn" data-user-id="{{.User.id}}">
+                Checkout
+            </a>
+            {{else}}
+            <a href="/login" class="btn cart-checkout-btn">Log In to Checkout</a>
+            {{end}}
+            <a href="/shop" class="cart-continue-link">← Continue Shopping</a>
+        </div>
+    </div>
+</div>
+
+<script>lucide.createIcons();</script>
+{{end}}

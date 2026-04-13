@@ -1,0 +1,23 @@
+{{define "title"}}My Wishlist – Clothes Store{{end}}
+
+{{define "content"}}
+<div class="cart-page">
+    <div class="cart-header">
+        <h1 class="cart-page-title"><i data-lucide="heart"></i> My Wishlist</h1>
+    </div>
+
+    
+    <div id="wishlist-items" class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+    </div>
+
+    
+    <div id="wishlist-empty" class="cart-empty-state" style="display:none;">
+        <i data-lucide="heart" class="cart-empty-icon"></i>
+        <h2>Your wishlist is empty</h2>
+        <p>Use the <strong>♡</strong> icon on products to add them here.</p>
+        <a href="/shop" class="btn">Browse Products</a>
+    </div>
+</div>
+
+<script>lucide.createIcons();</script>
+{{end}}

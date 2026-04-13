@@ -1,0 +1,639 @@
+{{define "title"}}Order History — CLOTHES STORE{{end}}
+
+{{define "content"}}
+<style>
+    .orders-wrapper {
+        max-width: 1000px;
+        margin: 40px auto 120px;
+        padding: 0 20px;
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: #000;
+    }
+
+    .page-title-section {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 42px;
+        font-weight: 400;
+        margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: #757575;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .order-card {
+        border: 1px solid #eee;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .order-card:hover {
+        border-color: #d1d1d1;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .order-card.is-active {
+        border-color: #111;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .order-summary-row {
+        padding: 28px 32px;
+        display: grid;
+        grid-template-columns: 1.8fr 1fr 1fr auto;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .order-summary-row:hover {
+        background: #fafafa;
+    }
+
+    .order-id-info h3 {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .order-date {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .order-meta-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .meta-pill {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: #f5f5f5;
+        color: #666;
+    }
+
+    .badge {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+
+    .status-delivered {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .status-transit {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .status-awaiting {
+        background: #f5f5f5;
+        color: #737373;
+    }
+
+    .status-cancelled {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .order-total-amount {
+        font-size: 20px;
+        font-weight: 700;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .btn-details-toggle {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #111;
+        background: none;
+        border: 1px solid #ddd;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .btn-details-toggle:hover {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+    }
+
+    .order-card.is-active .btn-details-toggle {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+    }
+
+    .order-expanded-area {
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .order-expanded-inner {
+        padding: 0 32px 32px;
+    }
+
+    .order-card.is-active .order-expanded-area {
+        max-height: 2000px;
+    }
+
+    .expanded-divider {
+        height: 1px;
+        background: #eee;
+        margin-bottom: 28px;
+    }
+
+    .details-info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .info-group h4 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #999;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .info-group p {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .info-group .payment-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 4px;
+    }
+
+    .payment-paid {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .payment-pending {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    .items-table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #999;
+    }
+
+    .items-table-header span:last-child {
+        text-align: right;
+    }
+
+    .items-table-header span:nth-child(2) {
+        text-align: center;
+    }
+
+    .item-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        padding: 16px 0;
+        border-bottom: 1px solid #f5f5f5;
+        align-items: center;
+    }
+
+    .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .item-name {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .item-size {
+        font-size: 12px;
+        color: #999;
+        margin-top: 2px;
+    }
+
+    .item-qty {
+        font-size: 14px;
+        color: #666;
+        text-align: center;
+    }
+
+    .item-price {
+        font-size: 14px;
+        font-weight: 700;
+        text-align: right;
+    }
+
+    .order-totals-box {
+        background: #fafafa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .order-totals-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #666;
+        padding: 6px 0;
+    }
+
+    .order-totals-row.total-row {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+        padding-top: 12px;
+        margin-top: 8px;
+        border-top: 1px solid #e5e5e5;
+    }
+
+    .order-address-line {
+        margin-top: 16px;
+        font-size: 13px;
+        color: #666;
+    }
+
+    .order-address-line strong {
+        color: #111;
+        font-weight: 600;
+    }
+
+    .order-card-actions {
+        border-top: 1px solid #eee;
+        padding-top: 24px;
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 12px 24px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 700;
+        border-radius: 6px;
+        border: 1px solid #111;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .action-btn-primary {
+        background: #111;
+        color: #fff;
+    }
+
+    .action-btn-primary:hover {
+        background: #333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-btn-outline {
+        background: transparent;
+        color: #111;
+    }
+
+    .action-btn-outline:hover {
+        background: #f5f5f5;
+    }
+
+    .action-btn-danger {
+        background: transparent;
+        color: #dc2626;
+        border-color: #fecaca;
+    }
+
+    .action-btn-danger:hover {
+        background: #fef2f2;
+        border-color: #dc2626;
+    }
+
+    .empty-orders {
+        text-align: center;
+        padding: 100px 0;
+        border: 1px dashed #e5e5e5;
+        border-radius: 12px;
+    }
+
+    .empty-orders-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+
+    .empty-orders h3 {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .empty-orders p {
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .order-summary-row {
+            grid-template-columns: 1fr;
+            text-align: left;
+            gap: 12px;
+            padding: 20px 24px;
+        }
+
+        .order-total-amount {
+            text-align: left;
+        }
+
+        .details-info-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .order-expanded-inner {
+            padding: 0 24px 24px;
+        }
+
+        .order-card-actions {
+            flex-direction: column;
+        }
+
+        .action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .page-title {
+            font-size: 32px;
+        }
+    }
+</style>
+
+<div class="orders-wrapper">
+    <div class="page-title-section">
+        <h1 class="page-title">My Orders</h1>
+        <p class="page-subtitle">Your purchase history and delivery status</p>
+    </div>
+
+    {{range .Orders}}
+    <div class="order-card" id="order-{{.ID}}">
+        <div class="order-summary-row" onclick="toggleOrderCard('order-{{.ID}}')">
+            <div class="order-id-info">
+                <h3>Order #{{.ID | printf "%.8s"}}</h3>
+                <span class="order-date">{{.CreatedAt.Format "Jan 02, 2006"}}</span>
+            </div>
+            <div>
+                <span class="badge {{if eq .Status " delivered"}}status-delivered{{else if eq .Status "shipped"
+                    }}status-transit{{else if eq .Status "cancelled" }}status-cancelled{{else}}status-awaiting{{end}}">
+                    {{if eq .Status "delivered"}}Delivered{{else if eq .Status "shipped"}}In Transit{{else if eq .Status
+                    "cancelled"}}Cancelled{{else}}Awaiting Shipment{{end}}
+                </span>
+            </div>
+            <div class="order-total-amount">${{printf "%.2f" .Total}}</div>
+            <button class="btn-details-toggle"
+                onclick="event.stopPropagation(); toggleOrderCard('order-{{.ID}}')">Details</button>
+        </div>
+
+        <div class="order-expanded-area">
+            <div class="order-expanded-inner">
+                <div class="expanded-divider"></div>
+
+                <div class="details-info-grid">
+                    <div class="info-group">
+                        <h4>Delivery</h4>
+                        <p>{{if eq .DeliveryMethod "courier"}}Courier{{else if eq .DeliveryMethod "pickup"}}Pickup{{else
+                            if eq .DeliveryMethod "post"}}Post{{else}}{{.DeliveryMethod}}{{end}}</p>
+                    </div>
+                    <div class="info-group">
+                        <h4>Payment</h4>
+                        <p>{{if eq .PaymentMethod "card"}}Card{{else}}Cash{{end}}</p>
+                    </div>
+                    <div class="info-group">
+                        <h4>Payment Status</h4>
+                        <p>
+                            {{if eq .Status "delivered"}}
+                            <span class="payment-badge payment-paid">Paid</span>
+                            {{else if eq .Status "cancelled"}}
+                            <span class="payment-badge" style="background:#f5f5f5;color:#999;">—</span>
+                            {{else if eq .PaymentMethod "card"}}
+                            <span class="payment-badge payment-paid">Paid</span>
+                            {{else}}
+                            <span class="payment-badge payment-pending">Pending</span>
+                            {{end}}
+                        </p>
+                    </div>
+                    <div class="info-group">
+                        <h4>Delivery Status</h4>
+                        <p>
+                            {{if eq .Status "delivered"}}Delivered{{else if eq .Status "shipped"}}In Transit{{else if eq
+                            .Status "cancelled"}}Cancelled{{else}}Awaiting Shipment{{end}}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="items-table-header">
+                    <span>Product</span>
+                    <span>Qty</span>
+                    <span>Price</span>
+                </div>
+
+                {{range .Items}}
+                <div class="item-row">
+                    <div>
+                        <div class="item-name">{{.ProductName}}</div>
+                        {{if .SelectedSize}}<div class="item-size">Size: {{.SelectedSize}}</div>{{end}}
+                    </div>
+                    <div class="item-qty">× {{.Quantity}}</div>
+                    <div class="item-price">${{printf "%.2f" .LineTotal}}</div>
+                </div>
+                {{end}}
+
+                <div class="order-totals-box">
+                    <div class="order-totals-row">
+                        <span>Subtotal</span>
+                        <span>${{printf "%.2f" .Subtotal}}</span>
+                    </div>
+                    <div class="order-totals-row">
+                        <span>Delivery</span>
+                        <span>{{if eq .DeliveryFee 0.0}}Free{{else}}${{printf "%.2f" .DeliveryFee}}{{end}}</span>
+                    </div>
+                    <div class="order-totals-row total-row">
+                        <span>Total</span>
+                        <span>${{printf "%.2f" .Total}}</span>
+                    </div>
+                </div>
+
+                {{if .DeliveryAddress}}
+                <div class="order-address-line">
+                    <strong>Delivery Address:</strong> {{.DeliveryAddress}}
+                </div>
+                {{end}}
+
+                {{if .Comment}}
+                <div class="order-address-line">
+                    <strong>Note:</strong> {{.Comment}}
+                </div>
+                {{end}}
+
+                <div class="order-card-actions">
+                    {{if ne .Status "cancelled"}}
+                    <button class="action-btn action-btn-primary" onclick="reorderItems('{{.ID}}')">Reorder</button>
+                    {{end}}
+                    {{if and (ne .Status "delivered") (ne .Status "cancelled")}}
+                    <button class="action-btn action-btn-danger" onclick="cancelOrder('{{.ID}}', this)">Cancel
+                        Order</button>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+    {{if not .Orders}}
+    <div class="empty-orders">
+        <div class="empty-orders-icon">📦</div>
+        <h3>No orders yet</h3>
+        <p>When you place an order, it will appear here.</p>
+        <a href="/shop" class="action-btn action-btn-primary">Start Shopping</a>
+    </div>
+    {{end}}
+</div>
+
+<script>
+    function toggleOrderCard(id) {
+        var card = document.getElementById(id);
+        card.classList.toggle('is-active');
+    }
+
+    async function reorderItems(orderId) {
+        try {
+            var res = await fetch('/orders/' + orderId);
+            if (!res.ok) throw new Error('Failed to fetch order');
+            var order = await res.json();
+            var cart = JSON.parse(localStorage.getItem('clothes_store_cart') || '[]');
+            (order.items || []).forEach(function (item) {
+                var key = (item.product_id || '') + '|' + (item.selected_size || '') + '|' + (item.selected_color || '');
+                var existing = cart.find(function (c) {
+                    return (c.id + '|' + (c.size || '') + '|' + (c.color || '')) === key;
+                });
+                if (existing) {
+                    existing.qty += item.quantity;
+                } else {
+                    cart.push({
+                        id: item.product_id,
+                        name: item.product_name,
+                        price: item.unit_price,
+                        qty: item.quantity,
+                        size: item.selected_size || '',
+                        color: item.selected_color || '',
+                        image: ''
+                    });
+                }
+            });
+            localStorage.setItem('clothes_store_cart', JSON.stringify(cart));
+            window.location.href = '/cart';
+        } catch (err) {
+            alert('Failed to reorder. Please try again.');
+        }
+    }
+
+    async function cancelOrder(orderId, btn) {
+        if (!confirm('Are you sure you want to cancel this order?')) return;
+        try {
+            var res = await fetch('/orders/' + orderId + '/status', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'cancelled' })
+            });
+            if (!res.ok) throw new Error('Failed to cancel');
+
+            var card = document.getElementById('order-' + orderId);
+            var badge = card.querySelector('.badge');
+            if (badge) {
+                badge.className = 'badge status-cancelled';
+                badge.innerHTML = '';
+                badge.textContent = 'Cancelled';
+            }
+
+            var actionsDiv = card.querySelector('.order-card-actions');
+            if (actionsDiv) {
+                actionsDiv.innerHTML = '';
+            }
+
+            var deliveryStatus = card.querySelectorAll('.info-group p');
+            if (deliveryStatus.length >= 4) {
+                deliveryStatus[3].textContent = 'Cancelled';
+            }
+
+            alert('Order cancelled successfully.');
+        } catch (err) {
+            alert('Failed to cancel order. Please try again.');
+        }
+    }
+</script>
+{{end}}
