@@ -1,17 +1,83 @@
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: clothes-store-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: clothes-store-backend
+    environment:
+      PORT: "8080"
+      MONGODB_URI: mongodb://mongo:27017/clothes_store
+      JWT_SECRET: midterm_secret_change_me
+      FRONTEND_ROOT: /app/frontend
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: clothes-store-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
+    container_name: clothes-store-prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    depends_on:
+      - backend
+      - node-exporter
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    container_name: clothes-store-grafana
     ports:
       - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: clothes-store-node-exporter
+    command:
+      - "--path.rootfs=/host"
+    pid: host
+    volumes:
+      - '/:/host:ro'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  grafana_data:

@@ -1,8 +1,9 @@
 # Clothes Store
 
-A premium, modern Online store platform built with Go and MongoDB. Features a luxury design aesthetic with a fully functional shopping experience and a comprehensive administrative dashboard.
+An e-commerce web application built with Go (Gin) and MongoDB: storefront, cart, checkout, admin tools, and analytics. The UI uses HTML templates and static assets. For the midterm, an observability stack (Prometheus, Grafana, Node Exporter) is included and runs via Docker Compose.
 
 ## Team
+
 - Yskak Zhanibek
 - Nauanov Alikhan
 - Zhumagali Beibarys
@@ -10,167 +11,155 @@ A premium, modern Online store platform built with Go and MongoDB. Features a lu
 ## Features
 
 ### Customer Experience
-- **Modern Shop**: Advanced filtering (category, gender, color, size) and sorting.
-- **Product Details**: High-quality imagery, size selection, and stock status.
-- **Cart & Wishlist**: Persistent client-side shopping cart and wishlist management.
-- **Checkout**: Seamless checkout flow with address management and order confirmation.
-- **User Accounts**: Registration, login, and order history tracking.
+
+- **Shop**: filters (category, gender, color, size) and sorting.
+- **Product**: product page, sizes, stock.
+- **Cart & Wishlist**: client-side persistence.
+- **Checkout**: order placement flow.
+- **Accounts**: sign up, sign in, order history.
 
 ### Admin Dashboard
-- **Analytics**: Key performance indicators (Total Sales, Orders, Users).
-- **Product Management**: Complete CRUD with local image uploads and advanced validation.
-- **Order Management**: Track and update order statuses.
-- **User Management**: Overview of registered users.
+
+- **Analytics**: KPIs, revenue, top products.
+- **Products**: CRUD and image uploads.
+- **Orders**: order status updates.
+- **Users**: registered user list.
 
 ## Tech Stack
 
-- **Backend**: Go (Gin Web Framework)
+- **Backend**: Go (Gin)
 - **Database**: MongoDB
-- **Authentication**: JWT (JSON Web Tokens) with Secure Cookies
-- **Frontend**: Semantic HTML5, Vanilla CSS (Modern CSS variables), JavaScript (ES6+)
-- **Icons**: Lucide Icons
-
-## Database Performance
-
-- **Multi-stage aggregation**: Analytics uses MongoDB pipelines (`$facet`, `$group`, `$lookup`, `$sort`) to compute totals, revenue trends, and top products without loading every order into memory.
-- **Compound indexes**: `orders` uses `{ userId: 1, createdAt: -1 }` for user history and recent sorting; `order_items` uses `{ orderId: 1, productId: 1 }` to accelerate joins and product sales grouping.
-- **Reduced transfer**: Aggregations return compact summaries and only a small window of recent orders.
+- **Auth**: JWT + `auth_token` cookie
+- **Frontend**: HTML templates, CSS, vanilla JavaScript
+- **Observability**: Prometheus, Grafana, Node Exporter (midterm)
 
 ## Project Structure
 
-```bash
-├── cmd/
-│   └── server/          # Entry point (main.go)
-├── internal/
-│   ├── api/             # Routing and Middleware
-│   ├── config/          # Environment configuration
-│   ├── db/              # Database connection
-│   ├── handlers/        # HTTP Handlers
-│   ├── models/          # Data structures
-│   ├── repository/      # Database operations
-│   └── services/        # Business logic
-├── static/
-│   ├── assets/          # Images, Banners, UI elements
-│   ├── css/             # Stylesheets
-│   └── js/              # Client-side logic
-└── templates/           # HTML fragments
+```text
+├── backend/
+│   ├── cmd/server/          # Application entrypoint
+│   ├── internal/            # API, handlers, services, middleware (incl. Prometheus)
+│   └── Dockerfile
+├── frontend/
+│   ├── static/              # CSS, JS, assets (uploads: static/assets/products/)
+│   ├── templates/           # HTML (Gin templates)
+│   ├── nginx.conf           # Reverse proxy to backend (in Docker)
+│   └── Dockerfile
+├── monitoring/
+│   ├── prometheus.yml       # Scrape backend + node-exporter
+│   ├── alert_rules.yml      # Alerting rules
+│   └── grafana/
+│       ├── provisioning/    # Datasource + dashboard provisioning
+│       └── dashboards/      # Dashboard JSON (Midterm overview)
+├── docker-compose.yml
+└── MIDTERM_REPORT.md        # Report draft (SLI/SLO, screenshot checklist)
 ```
 
-## Setup & Installation
+## Where metrics and charts come from
 
-### Prerequisites
-- Go 1.25+
-- MongoDB instance
+| What | Source |
+|------|--------|
+| **Application HTTP metrics** | Middleware `backend/internal/middleware/prometheus.go`: `clothes_store_http_requests_total`, `clothes_store_http_request_duration_seconds_*`, `clothes_store_http_requests_in_flight`. `/metrics` is registered in `backend/cmd/server/main.go`. |
+| **Scraping** | Prometheus pulls `http://backend:8080/metrics` inside the Docker network. Config: `monitoring/prometheus.yml`, job `clothes-store-app`. |
+| **Host metrics (CPU, etc.)** | Node Exporter (`node-exporter:9100`), job `node-exporter` in the same `prometheus.yml`. |
+| **Grafana charts** | Prometheus datasource (`monitoring/grafana/provisioning/datasources/prometheus.yml`, `uid: prometheus`). Dashboard `monitoring/grafana/dashboards/midterm-overview.json` (Golden Signals, SLO, CPU). |
 
-### 1. Environment Configuration
-Create a `.env` file in the root directory:
+## How to feed data (so charts are not flat)
+
+- **HTTP traffic**: open the site in a browser or call the API, e.g.:
+  - `curl http://localhost:8081/ping` (host port **8081** maps to container **8080**)
+  - or open `http://localhost` (Nginx → backend).
+- **Business data**: use the UI or REST (`/auth/register`, `/api/product`, `/orders`, …) — data is stored in **MongoDB** (service `mongo` in Compose, URI `mongodb://mongo:27017/clothes_store`).
+- **Product images**: saved under `frontend/static/assets/products/` (in containers, `FRONTEND_ROOT` points at the bundled frontend tree).
+
+## Local run without Docker
+
+Requirements: Go 1.25+, MongoDB.
+
+Create a `.env` in the repo root (or export variables):
+
 ```env
-PORT=8000
-MONGODB_URI=Nelzya
-JWT_SECRET=No
-ADMIN_EMAIL=No
+PORT=8080
+MONGODB_URI=mongodb://localhost:27017/clothes_store
+JWT_SECRET=your_secret
 ```
 
-### 2. Run the Application
+Run:
+
 ```bash
-go run cmd/server/main.go
+cd backend && go run ./cmd/server
 ```
-The server will start at http://localhost:8000.
 
-## API Documentation
+Server: `http://localhost:8080` (or the port from `PORT`).
 
-### Authentication
-- **POST** `/auth/register`
-  - Request (JSON):
-    ```json
-    { "fullName": "John Doe", "email": "john@example.com", "password": "secret123" }
-    ```
-  - Response `201`:
-    ```json
-    { "message": "user registered" }
-    ```
-- **POST** `/auth/login`
-  - Request (JSON):
-    ```json
-    { "email": "john@example.com", "password": "secret123" }
-    ```
-  - Response `200`:
-    ```json
-    { "token": "jwt-token" }
-    ```
-- **GET** `/auth/logout` (browser redirect)
+## Full stack (midterm): Docker Compose
 
-**Auth for API**: send `Authorization: Bearer <token>` or cookie `auth_token`.
+```bash
+docker compose up --build -d
+```
 
-### Products
-- **GET** `/api/product`
-  - Response `200`:
-    ```json
-    [{ "id": "p1", "name": "Sneakers", "price": 120, "sizes": ["41","42"], "colors": ["black"] }]
-    ```
-- **GET** `/api/product/:id`
-  - Response `200`: product object
-- **POST** `/api/product` (admin, multipart/form-data)
-  - Example:
-    ```bash
-    curl -X POST http://localhost:8000/api/product \
-      -H "Authorization: Bearer <token>" \
-      -F "name=Sneakers" -F "price=120" -F "category=shoes" \
-      -F "gender=unisex" -F "sizes=41,42" -F "colors=black" \
-      -F "stock=41:5,42:3" -F "image=@./sneakers.jpg"
-    ```
-  - Response `201`: product object
-- **PUT** `/api/product/:id` (admin, JSON body = product)
-- **DELETE** `/api/product/:id` (admin) → `204`
+If Grafana still shows an old datasource and panels look empty:
 
-### Orders
-- **GET** `/orders?user_id={userId}`
-  - Response `200`: array of orders
-- **POST** `/orders`
-  - Request (JSON):
-    ```json
-    {
-      "user_id": "u1",
-      "payment_method": "card",
-      "delivery_method": "courier",
-      "delivery_address": "Almaty, Abay 10",
-      "comment": "leave at door",
-      "items": [
-        {
-          "product_id": "p1",
-          "product_name": "Sneakers",
-          "selected_size": "42",
-          "selected_color": "black",
-          "quantity": 1,
-          "unit_price": 120
-        }
-      ]
-    }
-    ```
-  - Response `201`: order object
-- **GET** `/orders/:id`
-  - Response `200`: order object
-- **PATCH** `/orders/:id/status`
-  - Request (JSON):
-    ```json
-    { "status": "completed" }
-    ```
-  - Response `200`:
-    ```json
-    { "id": "orderId", "status": "completed" }
-    ```
+```bash
+docker compose down -v
+docker compose up --build -d
+```
 
-### Analytics (admin)
-- **GET** `/api/analytics/stats` → dashboard stats
-- **GET** `/api/analytics/top-products` → top product sales
-- **GET** `/api/analytics/revenue?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
-  - Response `200`:
-    ```json
-    [{ "date": "2026-02-01", "revenue": 520, "orders": 4 }]
-    ```
-- **GET** `/api/analytics/orders-status` → `{ "pending": 2, "completed": 5 }`
+### Ports (current)
 
-## Code Quality
-- **Clean Architecture**: Separation of concerns between layers.
-- **Optimized Assets**: Localized assets for faster loading and reliability.
-- **Sanitized**: Codebase is free of redundant comments and junk files.
+| Service | URL |
+|---------|-----|
+| Site (Nginx → backend) | http://localhost |
+| Backend (host) | http://localhost:8081 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 (default login: `admin` / `admin`) |
+| Node Exporter | http://localhost:9100/metrics |
+| MongoDB | localhost:27017 |
+
+Check Prometheus targets: http://localhost:9090/targets — `clothes-store-app` and `node-exporter` should be **UP**.
+
+In Grafana: **Dashboards → Midterm folder → Midterm - Clothes Store Overview** (Golden Signals, SLO availability, p95 latency, CPU).
+
+### Quick traffic for charts
+
+```bash
+for i in {1..100}; do curl -s http://localhost:8081/ping >/dev/null; done
+```
+
+## API (short)
+
+When calling from the host, use port **8081** for direct backend access.
+
+- `POST /auth/register`, `POST /auth/login` (JSON or form)
+- `GET /api/product`, `GET /api/product/:id`
+- `POST /orders`, `GET /orders/:id`, …
+- Admin: `POST /api/product` (multipart), analytics under `/api/analytics/...`
+
+See handlers and `internal/api/router.go` for full routes.
+
+## Midterm: alerts
+
+Rules: `monitoring/alert_rules.yml`. Example manual trigger (service unavailable for scrape):
+
+```bash
+docker compose stop backend
+```
+
+After ~1 minute, Prometheus → **Alerts** should show a **FIRING** alert (e.g. `ClothesStoreServiceDown`).
+
+## Docker Swarm (bonus +10)
+
+Swarm is **not** enabled by default in this repo; only the steps below are documented.
+
+```bash
+docker swarm init
+docker stack deploy -c docker-compose.yml clothes-store
+```
+
+For multiple backend replicas in Swarm, add `deploy.replicas` (e.g. `2`) under the `backend` service and keep Nginx pointing at the `backend` **service name** — Swarm load-balances across replicas automatically.
+
+## Code quality
+
+- Layering: handlers → services → repository.
+- MongoDB indexes for orders and line items.
+- Prometheus metrics via middleware.
