@@ -46,12 +46,16 @@ An e-commerce web application built with Go (Gin) and MongoDB: storefront, cart,
 │   ├── nginx.conf           # Reverse proxy to backend (in Docker)
 │   └── Dockerfile
 ├── monitoring/
-│   ├── prometheus.yml       # Scrape backend + node-exporter
+│   ├── prometheus.yml       # Scrape backend + node-exporter (docker compose)
+│   ├── prometheus-swarm.yml # Swarm: DNS SD for tasks.backend (docker stack)
 │   ├── alert_rules.yml      # Alerting rules
 │   └── grafana/
 │       ├── provisioning/    # Datasource + dashboard provisioning
 │       └── dashboards/      # Dashboard JSON (Midterm overview)
 ├── docker-compose.yml
+├── docker-stack.yml         # Docker Swarm (docker stack deploy)
+├── DOCKER_SWARM.md          # Swarm: why, what, how (bonus)
+├── scripts/swarm-build.sh   # Build images for Swarm stack
 ├── MIDTERM_REPORT.md        # Report draft (SLI/SLO, screenshot checklist)
 ├── PRESENTATION.md          # Slide-by-slide defense deck (copy to Slides)
 └── DEFENSE_SIMPLE_RU.md     # Simple Russian “explain like I’m 5” for oral defense
@@ -148,6 +152,30 @@ docker compose stop backend
 ```
 
 After ~1 minute, Prometheus → **Alerts** should show a **FIRING** alert (e.g. `ClothesStoreServiceDown`).
+
+## Docker Swarm (midterm bonus +10)
+
+`docker compose up` is enough for the main grade. For the **bonus**, deploy with **`docker stack deploy`** and show **replicas**.
+
+| File | Purpose |
+|------|---------|
+| `docker-stack.yml` | Swarm stack: `deploy.replicas` for frontend/backend, overlay network, `node-exporter` **global** |
+| `monitoring/prometheus-swarm.yml` | Prometheus **DNS SD** on `tasks.backend` (each replica scraped) |
+| `scripts/swarm-build.sh` | Build `clothes-store-*:latest` images (Swarm does not run `build`) |
+| `DOCKER_SWARM.md` | **Why Swarm**, what it does here, commands for defense |
+
+**Quick start** (from repo root):
+
+```bash
+docker swarm init
+./scripts/swarm-build.sh
+docker stack deploy -c docker-stack.yml clothes-store
+```
+
+Verify replicas: `docker service ps clothes-store_backend`.  
+Remove: `docker stack rm clothes-store`.
+
+**Before Swarm**, stop Compose to free ports: `docker compose down`.
 
 ## Code quality
 

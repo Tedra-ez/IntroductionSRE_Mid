@@ -124,3 +124,42 @@ Wait ~1 minute → Prometheus → Alerts.
 - [ ] Grafana — dashboard with Golden Signals and SLO.
 - [ ] One alert in **FIRING** state.
 - [ ] SLI/SLO/error-budget text from section 2.
+
+---
+
+## 6) Bonus (Docker Swarm +10)
+
+Swarm bonus is optional in the rubric. This repository includes a working Swarm path:
+
+- `docker-stack.yml`
+- `monitoring/prometheus-swarm.yml`
+- `scripts/swarm-build.sh`
+
+### Bonus proof checklist
+
+- [ ] `docker swarm init` was executed (or existing Swarm manager shown).
+- [ ] `docker stack deploy -c docker-stack.yml clothes-store` executed successfully.
+- [ ] `docker node ls` screenshot shows cluster manager node.
+- [ ] `docker service ls` screenshot shows stack services.
+- [ ] `docker service ps clothes-store_backend` screenshot shows replica tasks.
+- [ ] Prometheus still scraping app metrics in Swarm mode (`tasks.backend` target discovery).
+
+---
+
+## 7) References
+
+https://github.com/Tedra-ez/IntroductionSRE_Mid
+
+Project Clothes Store. System used in midterm project
+
+http://localhost:8081 - Clothes Store localhost
+
+http://localhost:9090/targets - Prometheus targets 
+
+http://localhost:9090/query?g0.expr=clothes_store_http_requests_total%0A%0A&g0.show_tree=0&g0.tab=table&g0.range_input=1h&g0.res_type=auto&g0.res_density=medium&g0.display_mode=lines&g0.show_exemplars=0 - Prometheus query  "clothes_store_http_requests_total" 
+
+http://localhost:9090/alerts - Prometheus alerts 
+
+http://localhost:3000 - Grafana to see Dashboards of Project
+
+http://localhost:3000/alerting/list - List of alert in Grafana

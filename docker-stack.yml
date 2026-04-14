@@ -1,0 +1,134 @@
+# Docker Swarm stack (midterm bonus): docker stack deploy -c docker-stack.yml <stack-name>
+# Build images first: ./scripts/swarm-build.sh
+#
+# Swarm does not build images — only pre-built image: references are allowed.
+
+services:
+  frontend:
+    image: clothes-store-frontend:latest
+    ports:
+      - "80:80"
+    networks:
+      - clothes-net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+  backend:
+    image: clothes-store-backend:latest
+    environment:
+      PORT: "8080"
+      MONGODB_URI: mongodb://mongo:27017/clothes_store
+      JWT_SECRET: midterm_secret_change_me
+      FRONTEND_ROOT: /app/frontend
+    ports:
+      - "8081:8080"
+    networks:
+      - clothes-net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - clothes-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    networks:
+      - clothes-net
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - type: bind
+        source: ./monitoring/prometheus-swarm.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+      - type: bind
+        source: ./monitoring/alert_rules.yml
+        target: /etc/prometheus/alert_rules.yml
+        read_only: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    networks:
+      - clothes-net
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - type: bind
+        source: ./monitoring/grafana/provisioning
+        target: /etc/grafana/provisioning
+        read_only: true
+      - type: bind
+        source: ./monitoring/grafana/dashboards
+        target: /var/lib/grafana/dashboards
+        read_only: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    command:
+      - "--path.rootfs=/host"
+    ports:
+      - "9100:9100"
+    volumes:
+      - type: bind
+        source: /
+        target: /host
+        read_only: true
+    networks:
+      - clothes-net
+    pid: host
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+
+networks:
+  clothes-net:
+    driver: overlay
+    attachable: true
+
+volumes:
+  mongo_data:
+  grafana_data:
